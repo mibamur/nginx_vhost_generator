@@ -3,6 +3,8 @@ Nginx vhost generator
 
 Nginx conf templates pack, vhost generator and other.
 
+![logo](.skel/vhost-dev/nginx.png)
+
 * SSL and SPDY, Logs agregator, Backup, Private/Public, FastCGI, uWSGI and HTTP Proxy
 * lang and frameworks
     - php (a lot)
