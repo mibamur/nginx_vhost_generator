@@ -1,0 +1,121 @@
+server {
+  listen 80;
+  server_name md.com www.md.com;
+  rewrite ^ https://$server_name$request_uri? permanent;
+}
+
+server {
+  # listen 80 deferred; # for Linux
+  # listen 80 accept_filter=httpready; # for FreeBSD
+  listen 443;
+
+  # The host name to respond to
+  server_name md.com *.md.com;
+
+  # Path for static files
+  root /sites/md.com/public;
+
+  ssl on;
+  ssl_certificate /etc/nginx/ssl/ssl.pem;
+  ssl_certificate_key /etc/nginx/ssl/ssl.key;
+
+  # Try static files first, then php
+  index index.html index.htm index.php;
+
+  # Specific logs for this vhost
+  access_log /sites/md.com/log/log-access.log;
+  error_log  /sites/md.com/log/log-error.log error;
+
+  #Specify a charset
+  charset utf-8;
+
+  rewrite ^/([0-9])(\-[_a-zA-Z0-9-]*)?(-[0-9]+)?/.+\.jpg$ /img/p/$1/$1$2$3.jpg last;
+  rewrite ^/([0-9])([0-9])(\-[_a-zA-Z0-9-]*)?(-[0-9]+)?/.+\.jpg$ /img/p/$1/$2/$1$2$3$4.jpg last;
+  rewrite ^/([0-9])([0-9])([0-9])(\-[_a-zA-Z0-9-]*)?(-[0-9]+)?/.+\.jpg$ /img/p/$1/$2/$3/$1$2$3$4$5.jpg last;
+  rewrite ^/([0-9])([0-9])([0-9])([0-9])(\-[_a-zA-Z0-9-]*)?(-[0-9]+)?/.+\.jpg$ /img/p/$1/$2/$3/$4/$1$2$3$4$5$6.jpg last;
+  rewrite ^/([0-9])([0-9])([0-9])([0-9])([0-9])(\-[_a-zA-Z0-9-]*)?(-[0-9]+)?/.+\.jpg$ /img/p/$1/$2/$3/$4/$5/$1$2$3$4$5$6$7.jpg last;
+  rewrite ^/([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])(\-[_a-zA-Z0-9-]*)?(-[0-9]+)?/.+\.jpg$ /img/p/$1/$2/$3/$4/$5/$6/$1$2$3$4$5$6$7$8.jpg last;
+  rewrite ^/([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])(\-[_a-zA-Z0-9-]*)?(-[0-9]+)?/.+\.jpg$ /img/p/$1/$2/$3/$4/$5/$6/$7/$1$2$3$4$5$6$7$8$9.jpg last;
+  rewrite ^/([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])(\-[_a-zA-Z0-9-]*)?(-[0-9]+)?/.+\.jpg$ /img/p/$1/$2/$3/$4/$5/$6/$7/$8/$1$2$3$4$5$6$7$8$9$10.jpg last;
+  rewrite ^/order$ /index.php?controller=order last;
+  if (!-e $request_filename){
+    rewrite ^(.*)$ /index.php last;
+  }
+
+  # Redirect needed to "hide" index.php
+  location / {
+    try_files $uri $uri/ /index.php?q=$uri&$args;
+  }
+
+  location /c {
+    rewrite ^/c/([0-9]+)(\-[\.*_a-zA-Z0-9-]*)(-[0-9]+)?/.+\.jpg$ /img/p/$1$2$3.jpg last;
+    rewrite ^/c/([a-zA-Z_-]+)(-[0-9]+)?/.+\.jpg$ /img/p/$1$2.jpg last;
+  }
+
+  location /p {
+    rewrite ^/p/([0-9]+)(\-[\.*_a-zA-Z0-9-]*)(-[0-9]+)?/.+\.jpg$ /img/p/$1$2$3.jpg last;
+    rewrite ^/p/([a-zA-Z_-]+)(-[0-9]+)?/.+\.jpg$ /img/p/$1$2.jpg last;
+  }
+
+  location /images_ie {
+    rewrite ^/images_ie/?([^/]+)\.(jpe?g|png|gif)$ /js/jquery/plugins/fancybox/images/$1.$2 last;
+  }
+
+  # Don't log robots.txt or favicon.ico files
+  location ~* ^/(favicon.ico|robots.txt)$ {
+    access_log off;
+    log_not_found off;
+  }
+  # Custom 404 page
+  error_page 404 /index.php?controller=404;
+
+  location ~* ^.+.(gif|jpg|jpeg|png|wmv|avi|mpg|mpeg|mp4|htm|html|js|css|mp3|swf|ico|flv|xml) {
+    access_log off;
+    expires 30d;
+  }
+
+  # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+  location ~ \.php$ {
+    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
+
+    # With php5-cgi alone:
+    # fastcgi_pass 127.0.0.1:9000;
+    # With php5-fpm:
+    fastcgi_pass unix:/var/run/php5-fpm.sock;
+    fastcgi_intercept_errors on;
+    fastcgi_buffers 8 16k;
+    fastcgi_buffer_size 32k;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    include fastcgi_params;
+  }
+
+  # Deny access to .htaccess
+  location ~ /\.ht {
+    deny all;
+  }
+
+  #PHPMYADMIN
+  location /phpmyadmin {
+   root /usr/share/;
+   index index.php index.html index.htm;
+   location ~ ^/phpmyadmin/(.+\.php)$ {
+     try_files $uri =404;
+     root /usr/share/;
+     fastcgi_pass unix:/var/run/php5-fpm.sock;
+     fastcgi_index index.php;
+     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+     include fastcgi_params;
+   }
+   location ~* ^/phpmyadmin/(.+\.(jpeg|jpg|png|css|gif|ico|js|html|xml|txt))$ {
+     root /usr/share/;
+   }
+ }
+ location /phpMyAdmin {
+   rewrite ^/* /phpmyadmin last;
+ }
+
+ # Include the basic h5bp config set
+ include h5bp/basic.conf;
+}

@@ -1,0 +1,53 @@
+
+
+	if ($host != a-a.ru) {
+		rewrite  ^/(.*)$  http://a-a.ru/$1  permanent;
+ 	}	
+	
+	location /sitemap.xml {
+		rewrite ^ /index.php?route=feed/google_sitemap last;
+	}
+
+	location /googlebase.xml {
+		rewrite ^ /index.php?route=feed/google_base last;
+	}
+
+	location /download/ {
+		rewrite ^ /index.php?route=error/not_found last;
+	}
+
+	location = /yandexmarket.xml {
+		rewrite ^ /index.php?route=feed/yandex_market;
+	}
+
+	location ~* \.(ico|jpe?g|gif|png|css|js|pdf|txt|tar|t?gz|t?bz2|deb|t?xz|zip|svgz?|flac|ogg|avi|rar|mp([[:digit:]]|e?g)|xls|pp(t|s)|ps|patch|diff|od(t|s|p)|pot?|psd)$ {
+		expires max;
+	}
+
+	location / {
+		try_files $uri $uri/ @rewrite;
+	}
+
+	location @rewrite {
+		rewrite ^/(.*)$ /index.php?_route_=$1;
+	}
+
+	location @rewrite_custom {
+		rewrite ^/(.*)$ /index.php?route=$1;
+	}
+
+	location ~ \.(tpl|ini|log) {
+        	return 404;
+	}
+
+	location ~* ^/(extras|vqmod|vqgen) {
+		return 404;
+	}
+
+	location ~ \.php$ {
+		fastcgi_pass 127.0.0.1:9000;
+		fastcgi_index index.php;
+		fastcgi_param APPLICATION_ENV production;
+		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+		include fastcgi_params;
+	} 
