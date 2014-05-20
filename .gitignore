@@ -5,7 +5,7 @@
 
 # But not these files...
 !.gitignore
-!.skel/*
+!.skel/
 !generate_nginx_vhost.sh
 
 
