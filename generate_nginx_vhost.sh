@@ -53,11 +53,16 @@ VHOST_DB_PASS=$(random-pass)
 # echo -e "Random pass: $VHOST_DB_PASS"
 # echo -e "Enter another password for DB or press ENTER to use this:";
 
+VHOST_USER=$( echo $VHOST | sed -e 's#.#_#g' )
+VHOST_DB=$VHOST_USER
+
 if [ "$YESNO" = "y" ] ; then
-  mysql -u $VHOST_DB_ROOT_USER -p$VHOST_DB_ROOT_PASS -e "CREATE DATABASE $VHOST;"
-  mysql -u $VHOST_DB_ROOT_USER -p$VHOST_DB_ROOT_PASS -e "CREATE USER '$VHOST'@'localhost' IDENTIFIED BY '$VHOST_DB_PASS';"
+  mysql -u $VHOST_DB_ROOT_USER -p$VHOST_DB_ROOT_PASS -e "CREATE DATABASE $VHOST_DB;"
+  mysql -u $VHOST_DB_ROOT_USER -p$VHOST_DB_ROOT_PASS -e "CREATE USER '$VHOST_USER'@'localhost' IDENTIFIED BY '$VHOST_DB_PASS';"
   mysql -u $VHOST_DB_ROOT_USER -p$VHOST_DB_ROOT_PASS -e "GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP ON $VHOST.* TO '$VHOST'@'localhost';"
   mysql -u $VHOST_DB_ROOT_USER -p$VHOST_DB_ROOT_PASS -e "FLUSH PRIVILEGES;"
+  echo -e "User: $VHOST_DB";
+  echo -e "Pass: $VHOST_DB_PASS";
 fi
 
 
